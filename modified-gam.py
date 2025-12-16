@@ -4,86 +4,15 @@ import pandas as pd
 # 페이지 설정
 st.set_page_config(page_title="GAM Media Calculator", page_icon="🧫")
 
-st.title("🧫 GAM Modified + Vit K1 Calculator")
-st.caption("Based on Protocol: GAM modified supplemented with vitamin K1 (Geunhui Shin, 2025)")
+st.title("🧫 GAM Modified + Vitamin K1 Calculator")
+#st.caption("Based on Protocol: GAM modified supplemented with vitamin K1 (Geunhui Shin, 2025)")
 
 # 탭 분리: 배지 제조 vs 스톡 용액 제조
-tab1, tab2 = st.tabs(["🥣 Media Preparation", "🧪 Stock Solutions"])
+tab1, tab2 = st.tabs(["🧪 Stock Solutions", "🥣 Media Preparation"])
 
-# --- TAB 1: 배지 제조 계산기 ---
+# --- TAB 1: 스톡 용액 제조 계산기 ---
 with tab1:
-    st.header("1. Media Preparation")
-    
-    # 사이드바 입력 (TAB 1용)
-    st.subheader("Target Volume Settings")
-    
-    # 입력 방식 선택 (부피 기준 vs 플레이트 수 기준)
-    calc_mode = st.radio("Calculate based on:", ["Total Volume (mL)", "Number of Plates"], horizontal=True)
-    
-    base_volume_ml = 0
-    
-    if calc_mode == "Total Volume (mL)":
-        target_vol = st.number_input("Target Volume (mL)", min_value=100, value=1000, step=100)
-        base_volume_ml = target_vol
-        # PDF 기준 1L = 40 plates [cite: 37]
-        estimated_plates = base_volume_ml / 25 
-        st.info(f"📊 Estimated yield: ~{int(estimated_plates)} plates (assuming 25mL/plate)")
-        
-    else:
-        num_plates = st.number_input("Number of Plates", min_value=1, value=40, step=1)
-        vol_per_plate = st.number_input("Volume per Plate (mL)", value=25)
-        base_volume_ml = num_plates * vol_per_plate
-        st.info(f"📊 Total Volume needed: {base_volume_ml} mL")
-
-    # Safety Margin (Dead Volume)
-    margin_pct = st.slider("Safety Margin (%)", 0, 20, 10, help="Extra volume to account for pipetting errors/evaporation")
-    final_vol = base_volume_ml * (1 + margin_pct / 100)
-    
-    st.divider()
-    
-    # Scaling Factor (Reference: 1000 mL)
-    # PDF Reference [cite: 37-39, 65, 92, 95, 101]
-    scale = final_vol / 1000.0
-
-    # 데이터프레임 생성
-    recipe_data = [
-        # Pre-autoclave [cite: 37-39]
-        {"Phase": "1. Pre-autoclave", "Reagent": "Distilled Water (Initial)", "Amount": 850 * scale, "Unit": "mL", "Note": "Dissolve powders in this"},
-        {"Phase": "1. Pre-autoclave", "Reagent": "GAM Broth Modified", "Amount": 35.4 * scale, "Unit": "g", "Note": "Cat# MB-G0826"},
-        {"Phase": "1. Pre-autoclave", "Reagent": "Bacto Agar", "Amount": 15.0 * scale, "Unit": "g", "Note": "Cat# 214010"},
-        {"Phase": "1. Pre-autoclave", "Reagent": "Distilled Water (Top-up)", "Amount": 970 * scale, "Unit": "mL", "Note": "Top up to this volume before autoclaving [cite: 65]"},
-        
-        # Post-autoclave [cite: 92, 95, 101]
-        {"Phase": "2. Post-autoclave", "Reagent": "Hemin Solution (0.5 g/L)", "Amount": 10.0 * scale, "Unit": "mL", "Note": "Add at ~50°C. Degrades >75°C "},
-        {"Phase": "2. Post-autoclave", "Reagent": "10% NaHCO3 (Filtered)", "Amount": 20.0 * scale, "Unit": "mL", "Note": "Decomposes >50°C [cite: 96]"},
-        {"Phase": "2. Post-autoclave", "Reagent": "Vitamin K1 (10 g/L)", "Amount": 100 * scale, "Unit": "µL", "Note": "Light sensitive"},
-    ]
-    
-    df_recipe = pd.DataFrame(recipe_data)
-    
-    # 결과 출력
-    st.write(f"### 📝 Recipe for {final_vol:.1f} mL")
-    st.dataframe(
-        df_recipe.style.format({"Amount": "{:.2f}"}), 
-        use_container_width=True,
-        hide_index=True
-    )
-    
-    # 체크리스트 모드
-    with st.expander("✅ Open Interactive Checklist"):
-        for _, row in df_recipe.iterrows():
-            st.checkbox(f"**{row['Reagent']}**: {row['Amount']:.2f} {row['Unit']} ({row['Note']})")
-
-    st.warning("""
-    **Critical Steps:**
-    * Autoclave at 121°C for 20 min[cite: 69].
-    * Cool to **50°C** before adding supplements[cite: 87].
-    * Hemin degrades rapidly at high temps (Half-life 0.73 days at 95°C)[cite: 94].
-    """)
-
-# --- TAB 2: 스톡 용액 제조 계산기 ---
-with tab2:
-    st.header("2. Stock Solution Calculator")
+    st.header("1. Stock Solution Calculator")
     
     stock_type = st.selectbox("Select Stock Solution", ["Hemin (0.5 g/L)", "Vitamin K1 (10 g/L)", "10% NaHCO3"])
     
@@ -131,3 +60,77 @@ with tab2:
         3. **Filter sterilize** using PES filter (Avoid Cellulose Nitrate/Acetate)[cite: 78, 79].
         4. Store at 2-8°C[cite: 80].
         """)
+
+# --- TAB 2: 배지 제조 계산기 ---
+with tab2:
+    # 1. 설정 (Settings)
+    with st.expander("⚙️ Calculation Settings", expanded=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            calc_mode = st.radio("Mode:", ["Total Volume (mL)", "Plate Count"], horizontal=True)
+        
+        with col2:
+            margin_pct = st.slider("Safety Margin (%)", 0, 20, 10)
+
+        if calc_mode == "Total Volume (mL)":
+            target_vol = st.number_input("Target Volume (mL)", value=1000, step=100)
+            base_volume = target_vol
+        else:
+            num_plates = st.number_input("Number of Plates", value=40)
+            vol_per_plate = st.number_input("Vol/Plate (mL)", value=25)
+            base_volume = num_plates * vol_per_plate
+
+        # 최종 부피 및 스케일 계산
+        final_vol = base_volume * (1 + margin_pct / 100)
+        scale = final_vol / 1000.0  # 기준 1L (1000mL)
+
+        st.metric(label="Final Volume to Prepare", value=f"{final_vol:.1f} mL")
+
+    st.divider()
+
+    # 2. Pre-autoclave Checklist
+    st.header("Phase 1: Pre-autoclave Preparation")
+    st.info("💡 Mix reagents and autoclave. Final pH should be 7.1 ± 0.2.")
+
+    # 계산된 양
+    water_start = 850 * scale
+    gam_g = 35.4 * scale
+    agar_g = 15.0 * scale
+    water_final_vol = 970 * scale
+
+    st.markdown("#### 📝 Checklist")
+    
+    # 체크박스에 포맷팅된 문자열 사용
+    step1 = st.checkbox(f"1. Measure **{water_start:.1f} mL** of distilled water in a flask/beaker.")
+    [cite_start]step2 = st.checkbox(f"2. Add **{gam_g:.2f} g** of **GAM Broth Modified** (MB-G0826)[cite: 38].")
+    [cite_start]step3 = st.checkbox(f"3. Add **{agar_g:.2f} g** of **Bacto Agar** (214010)[cite: 39].")
+    [cite_start]step4 = st.checkbox(f"4. Stir and heat on a hotplate (~60°C) until completely dissolved[cite: 62].")
+    [cite_start]step5 = st.checkbox(f"5. Add distilled water to bring total volume to **{water_final_vol:.1f} mL**[cite: 65].")
+    [cite_start]step6 = st.checkbox(f"6. Cover loosely with foil/tape and **Autoclave at 121°C for 20 min**[cite: 69].")
+
+    st.divider()
+
+    # 3. Post-autoclave Checklist
+    st.header("Phase 2: Post-autoclave Supplements")
+    st.warning("""
+    ⚠️ **Critical Temperature Control:**
+    * [cite_start]Cool medium to **50°C** before adding supplements[cite: 87].
+    * [cite_start]**Hemin** degrades rapidly >75°C (Half-life ~0.73 days at 95°C)[cite: 93, 94].
+    * [cite_start]**NaHCO3** decomposes >50°C[cite: 96].
+    """)
+
+    # 계산된 양
+    hemin_ml = 10.0 * scale
+    nahco3_ml = 20.0 * scale
+    vitk1_ul = 100 * scale 
+
+    st.markdown("#### 📝 Checklist")
+    
+    step7 = st.checkbox(f"7. Cool the medium to **50°C** in a water bath or at room temp.")
+    [cite_start]step8 = st.checkbox(f"8. (In Biosafety Cabinet) Add **{hemin_ml:.2f} mL** of Hemin stock (0.5 g/L)[cite: 92].")
+    [cite_start]step9 = st.checkbox(f"9. (In Biosafety Cabinet) Add **{nahco3_ml:.2f} mL** of filtered 10% NaHCO3[cite: 95].")
+    [cite_start]step10 = st.checkbox(f"10. (In Biosafety Cabinet) Add **{vitk1_ul:.1f} µL** of Vitamin K1 stock (10 g/L)[cite: 101].")
+    step11 = st.checkbox(f"11. Swirl gently to mix without creating bubbles.")
+    [cite_start]step12 = st.checkbox(f"12. Pour into Petri dishes and let dry with lids slightly open for ~1 hour[cite: 105].")
+    [cite_start]step13 = st.checkbox(f"13. Store plates at 2-8°C in the dark (wrap in foil)[cite: 109].")
+
