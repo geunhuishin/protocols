@@ -5,10 +5,9 @@ import pandas as pd
 st.set_page_config(page_title="FAA Recipe", page_icon="🧫")
 
 st.title("🧫 FAA Recipe")
-#st.caption("Based on Protocol: GAM modified supplemented with vitamin K1 (Geunhui Shin, 2025)")
 
-# 탭 분리: 스톡 용액 제조 vs 배지 제조
-tab1 = st.tabs(["🥣 Media Preparation"])
+# 탭 분리: st.tabs는 리스트를 반환하므로, [tab1]으로 받아서 리스트 껍질을 벗겨줘야 함
+[tab1] = st.tabs(["🥣 Media Preparation"])
 
 # --- TAB 1: 배지 제조 계산기 ---
 with tab1:
@@ -43,7 +42,7 @@ with tab1:
 
     # 계산된 양
     water_start = 900 * scale
-    gam_g = 33.6 * scale
+    gam_g = 33.6 * scale # FAA recipe에 맞게 변수명/값 확인 필요 (코드상에는 gam_g라고 되어있음)
     agar_g = 15.0 * scale
     water_final_vol = 950 * scale
 
