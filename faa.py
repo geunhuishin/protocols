@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # 페이지 설정
-st.set_page_config(page_title="FAA Recipe", page_icon="🧫")
+st.set_page_config(page_title="Fastidious Anaerobe Agar Recipe", page_icon="🧫")
 
 st.title("🧫 FAA Recipe")
 
@@ -41,20 +41,16 @@ with tab1:
     st.info("💡 Mix reagents and autoclave. Final pH should be 7.2 ± 0.2 at 25°C.")
 
     # 계산된 양
-    water_start = 900 * scale
-    gam_g = 33.6 * scale # FAA recipe에 맞게 변수명/값 확인 필요 (코드상에는 gam_g라고 되어있음)
+    water_start = 950 * scale
+    faa_g = 33.6 * scale
     agar_g = 15.0 * scale
-    water_final_vol = 950 * scale
-
+    
     st.markdown("#### 📝 Step-by-Step Checklist")
     
     # 체크박스 생성
-    step1 = st.checkbox(f"1. Measure **{water_start:.1f} mL** of distilled water in a flask/beaker.")
-    step2 = st.checkbox(f"2. Add **{gam_g:.2f} g** of **Fastidious Anaerobe Broth** (MB-F2169, KisanBio).")
-    step3 = st.checkbox(f"3. Add **{agar_g:.2f} g** of **Bacto Agar** (214010, BD/Difco).")
-    step4 = st.checkbox(f"4. Stir and heat on a hotplate (~60°C) until completely dissolved.")
-    step5 = st.checkbox(f"5. Add distilled water to bring total volume to **{water_final_vol:.1f} mL**.")
-    step6 = st.checkbox(f"6. Cover loosely with foil/tape and **Autoclave at 121°C for 15 min**.")
+    step1 = st.checkbox(f"1. Suspend **{faa_g:.2f} g** of **Fastidious Anaerobe Broth** (MB-F2169, KisanBio) powder in **{water_start:.1f} mL** of distilled water in Duran bottle.")
+    step3 = st.checkbox(f"2. Add **{agar_g:.2f} g** of **Bacto Agar** (214010, BD/Difco).")
+    step6 = st.checkbox(f"3. Cover loosely with foil/tape and **Strerilize by autoclave at 121°C for 15 min**.")
 
     st.divider()
 
@@ -71,8 +67,8 @@ with tab1:
 
     st.markdown("#### 📝 Step-by-Step Checklist")
     
-    step7 = st.checkbox(f"7. Cool the medium to **45°C to 50°C** at room temp.")
-    step9 = st.checkbox(f"8. (In Biosafety Cabinet) Add **{sheep_blood_defibrinated_ml:.2f} mL** of Sheep blood defibrinated (MB-S1876, KisanBio).")
-    step11 = st.checkbox(f"11. Swirl gently to mix without creating bubbles.")
-    step12 = st.checkbox(f"12. Pour into Petri dishes and let dry with lids slightly open for ~1 hour.")
-    step13 = st.checkbox(f"13. Store plates at 2-8°C in the dark (wrap in foil).")
+    step7 = st.checkbox(f"4. Cool the medium to **45°C to 50°C** at room temp.")
+    step9 = st.checkbox(f"5. (In Biosafety Cabinet) Add **{sheep_blood_defibrinated_ml:.2f} mL** of Sheep blood defibrinated (MB-S1876, KisanBio).")
+    step11 = st.checkbox(f"6. Swirl gently to mix without creating bubbles.")
+    step12 = st.checkbox(f"7. Pour into Petri dishes and let dry with lids slightly open for ~1 hour.")
+    step13 = st.checkbox(f"8. Store plates at 2-8°C in the dark (wrap in foil).")
