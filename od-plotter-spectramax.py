@@ -10,24 +10,28 @@ from io import BytesIO
 st.set_page_config(page_title="OD600 Plotter Pro", page_icon="📈", layout="wide")
 
 def parse_time(t_str):
-    """HH:MM:SS 형식을 시간(float)으로 변환"""
+    """더 강력해진 시간 파싱 함수"""
     try:
         t_str = str(t_str).strip()
+        # 엑셀 float 시간 형식 처리 (0.5 -> 12:00:00) 방지용으로 텍스트 처리 우선
         parts = t_str.split(':')
-        if len(parts) == 3:
+        if len(parts) == 3: # HH:MM:SS
             h, m, s = map(float, parts)
             return h + m/60 + s/3600
-        elif len(parts) == 2:
-            m, s = map(float, parts)
-            return m/60 + s/3600
+        elif len(parts) == 2: # MM:SS or HH:MM (상황에 따라 다름, 보통 SpectraMax는 HH:MM:SS 줌)
+            # 여기서는 안전하게 앞부분을 분, 뒷부분을 초로 가정하거나
+            # 데이터 파일 형식을 보고 판단해야 함. 일단 HH:MM:SS가 표준임.
+            # 만약 00:20 같이 나오면 분:초 일 가능성 높음
+            p1, p2 = map(float, parts)
+            return p1/60 + p2/3600 
     except:
         return None
     return None
 
 def main():
-    st.title("📈 OD600 Growth Curve Automator (Pro)")
+    st.title("📈 OD600 Growth Curve (Fix Spikes)")
     st.markdown("""
-    **기능 추가:** T=0 시점의 Blank 값을 조건별로 자동 매칭하여 보정합니다.
+    **수정 사항:** 그래프가 튀는 현상(Spikes)을 방지하기 위해 **시간 정렬**과 **음수 보정** 기능을 강화했습니다.
     """)
 
     # --- 1. 파일 업로드 ---
@@ -46,7 +50,6 @@ def main():
             df_layout_melt.dropna(subset=["SampleName"], inplace=True) 
             df_layout_melt["Well"] = df_layout_melt["Row"] + df_layout_melt["Col"].astype(str)
             
-            # 그룹 파싱: {Name}-{Condition}-{Replicate} -> Group: {Name}-{Condition}
             def get_group(name):
                 parts = str(name).split('-')
                 if len(parts) > 1:
@@ -83,54 +86,53 @@ def main():
             df_data["Hours"] = df_data["Time"].apply(parse_time)
             df_data.dropna(subset=["Hours"], inplace=True)
             
+            # [중요] 시간 순서대로 강제 정렬 (그래프 튀는 원인 1 제거)
+            df_data.sort_values("Hours", inplace=True)
+            
             # Long Format 변환
             df_data_long = df_data.melt(id_vars=["Time", "Hours"], var_name="Well", value_name="OD600")
             
             # --- 4. 데이터 병합 ---
             df_merged = pd.merge(df_data_long, df_layout_melt, on="Well", how="inner")
 
-            # --- 5. Blank Subtraction 로직 (NEW!) ---
+            # --- 5. Blank Subtraction ---
             st.sidebar.header("⚙️ Data Processing")
             use_blank_correction = st.sidebar.checkbox("Apply Blank Correction", value=True)
+            clip_negative = st.sidebar.checkbox("Clip Negative Values to 0", value=True, help="Blank 뺄셈 결과가 음수면 0으로 만듭니다. (그래프 튀는 원인 2 제거)")
             
             if use_blank_correction:
-                # 1. T=0 (최소 시간) 찾기
                 min_time = df_merged["Hours"].min()
-                
-                # 2. Blank 데이터만 추출 (이름이 'blank'로 시작하는 것)
                 df_blanks = df_merged[
                     (df_merged["Group"].str.lower().str.startswith("blank")) & 
                     (df_merged["Hours"] == min_time)
                 ].copy()
                 
                 if not df_blanks.empty:
-                    # 3. 조건(Condition) 추출 함수: "blank-1x" -> "1x"
                     def get_condition(group_name):
-                        parts = group_name.split('-', 1) # 첫 번째 하이픈에서만 자름
+                        parts = group_name.split('-', 1)
                         return parts[1] if len(parts) > 1 else "default"
 
                     df_blanks["Condition"] = df_blanks["Group"].apply(get_condition)
-                    
-                    # 4. 조건별 초기 Blank 평균값 계산
                     blank_map = df_blanks.groupby("Condition")["OD600"].mean().to_dict()
                     
-                    # 5. 전체 데이터에서 빼기
                     def subtract_blank(row):
                         group = row["Group"]
-                        # Blank 자체는 보정하지 않고 0으로 두거나 그대로 둘 수 있음 (여기서는 Blank도 뺌 -> 0 근처가 됨)
                         parts = group.split('-', 1)
                         condition = parts[1] if len(parts) > 1 else "default"
                         
+                        val = row["OD600"]
                         if condition in blank_map:
-                            return row["OD600"] - blank_map[condition]
-                        return row["OD600"]
+                            val = val - blank_map[condition]
+                        
+                        return val
 
-                    df_merged["OD600_Raw"] = df_merged["OD600"] # 원본 보존
-                    df_merged["OD600"] = df_merged.apply(subtract_blank, axis=1) # 덮어쓰기
+                    df_merged["OD600"] = df_merged.apply(subtract_blank, axis=1)
+                    
+                    # [중요] 음수 보정 적용
+                    if clip_negative:
+                        df_merged["OD600"] = df_merged["OD600"].clip(lower=0)
                     
                     st.sidebar.success(f"✅ Corrected using T={min_time}h blanks.")
-                    with st.sidebar.expander("Show Blank Values Used"):
-                        st.write(blank_map)
                 else:
                     st.sidebar.warning("⚠️ No 'blank' samples found at start time.")
 
@@ -140,15 +142,15 @@ def main():
             ).reset_index()
             stats['sem'] = stats['std'] / np.sqrt(stats['count'])
             
+            # [중요] 통계 데이터도 시간순 정렬 (그래프 그릴 때 꼬임 방지)
+            stats.sort_values("Hours", inplace=True)
+
             # --- 6. 그래프 설정 ---
             st.sidebar.divider()
             st.sidebar.header("🎨 Graph Settings")
             
-            # Blank 그룹은 그래프 그릴 때 기본적으로 제외할지 묻기
             all_groups = sorted(stats["Group"].unique())
             non_blank_groups = [g for g in all_groups if not g.lower().startswith("blank")]
-            
-            # 만약 blank correction을 했다면 blank 그룹은 제외하고 보여주는 게 깔끔함
             default_selection = non_blank_groups if use_blank_correction else all_groups
             
             selected_groups = st.sidebar.multiselect("Select Samples", all_groups, default=default_selection)
@@ -163,10 +165,6 @@ def main():
             st.sidebar.divider()
             plot_mode = st.sidebar.radio("Central Tendency", ["Mean", "Median"])
             error_type = st.sidebar.selectbox("Error Bar", ["Standard Deviation (SD)", "Standard Error (SEM)", "None"])
-            
-            # Y축 범위 설정 (Blank 빼면 음수 나올 수도 있으니 조정 가능하게)
-            y_min_auto = stats[stats["Group"].isin(selected_groups)]["mean"].min()
-            y_max_auto = stats[stats["Group"].isin(selected_groups)]["mean"].max()
             
             # --- 7. Plotting ---
             if selected_groups:
@@ -198,20 +196,23 @@ def main():
                     )
                 
                 ax.set_xlabel("Time (Hours)", fontsize=12)
-                ylabel = "OD600 (Blank Corrected)" if use_blank_correction else "OD600 (Raw)"
+                ylabel = "OD600 (Corrected)" if use_blank_correction else "OD600 (Raw)"
                 ax.set_ylabel(ylabel, fontsize=12)
                 ax.set_title(f"Growth Curve ({plot_mode})", fontsize=14)
                 ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left')
                 ax.grid(True, linestyle='--', alpha=0.5)
                 
-                # 0점 기준선 추가 (Blank 뺐을 때 유용)
                 if use_blank_correction:
                     ax.axhline(0, color='black', linewidth=0.8, linestyle='-')
 
                 plt.tight_layout()
                 st.pyplot(fig)
                 
-                # 다운로드
+                # 디버깅용: 시간 파싱 확인
+                with st.expander("🔍 Debug: Time Parsing Check"):
+                    st.write("원본 시간 vs 변환된 시간 (Hours) 확인:")
+                    st.dataframe(df_data[["Time", "Hours"]].drop_duplicates().head(10))
+
                 col_d1, col_d2 = st.columns(2)
                 csv_buffer = stats.to_csv(index=False).encode('utf-8')
                 col_d1.download_button("📥 Data (CSV)", csv_buffer, "growth_data.csv", "text/csv")
