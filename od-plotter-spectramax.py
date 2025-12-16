@@ -7,31 +7,51 @@ import numpy as np
 from io import BytesIO
 
 # 페이지 설정
-st.set_page_config(page_title="OD600 Plotter Pro", page_icon="📈", layout="wide")
+st.set_page_config(page_title="OD600 Plotter Ultimate", page_icon="📈", layout="wide")
 
 def parse_time(t_str):
-    """더 강력해진 시간 파싱 함수"""
+    """
+    [수정됨] 24시간 이상 실험 포맷 지원 (d.hh:mm:ss)
+    예: 1.01:00:00 -> 1일 1시간 = 25시간으로 변환
+    """
     try:
         t_str = str(t_str).strip()
-        # 엑셀 float 시간 형식 처리 (0.5 -> 12:00:00) 방지용으로 텍스트 처리 우선
         parts = t_str.split(':')
-        if len(parts) == 3: # HH:MM:SS
-            h, m, s = map(float, parts)
-            return h + m/60 + s/3600
-        elif len(parts) == 2: # MM:SS or HH:MM (상황에 따라 다름, 보통 SpectraMax는 HH:MM:SS 줌)
-            # 여기서는 안전하게 앞부분을 분, 뒷부분을 초로 가정하거나
-            # 데이터 파일 형식을 보고 판단해야 함. 일단 HH:MM:SS가 표준임.
-            # 만약 00:20 같이 나오면 분:초 일 가능성 높음
+        
+        # hh:mm:ss 또는 d.hh:mm:ss 형식
+        if len(parts) == 3:
+            # 첫 번째 파트(시)에 마침표(.)가 있는지 확인 (예: 1.01)
+            time_part = parts[0]
+            if '.' in time_part:
+                day_str, hour_str = time_part.split('.')
+                days = float(day_str)
+                hours = float(hour_str)
+                # 날짜를 시간으로 변환하여 합산
+                total_hours = (days * 24) + hours
+            else:
+                total_hours = float(time_part)
+            
+            minutes = float(parts[1])
+            seconds = float(parts[2])
+            
+            return total_hours + minutes/60 + seconds/3600
+            
+        # mm:ss 또는 hh:mm (드문 경우)
+        elif len(parts) == 2:
             p1, p2 = map(float, parts)
-            return p1/60 + p2/3600 
-    except:
+            # 보통 2개면 분:초 일 확률이 높지만, 상황에 따라 다름.
+            # 여기서는 안전하게 분:초로 가정
+            return p1/60 + p2/3600
+            
+    except Exception as e:
+        # st.write(f"Error parsing {t_str}: {e}") # 디버깅용
         return None
     return None
 
 def main():
-    st.title("📈 OD600 Growth Curve (Fix Spikes)")
+    st.title("📈 OD600 Growth Curve (Long-term Support)")
     st.markdown("""
-    **수정 사항:** 그래프가 튀는 현상(Spikes)을 방지하기 위해 **시간 정렬**과 **음수 보정** 기능을 강화했습니다.
+    **업데이트:** 24시간 이상 데이터(`1.01:00:00`) 포맷을 지원합니다.
     """)
 
     # --- 1. 파일 업로드 ---
@@ -83,10 +103,11 @@ def main():
             cols_to_keep = ["Time"] + [c for c in df_raw.columns if c in valid_wells]
             df_data = df_raw[cols_to_keep].copy()
             
+            # [수정된 파싱 함수 적용]
             df_data["Hours"] = df_data["Time"].apply(parse_time)
             df_data.dropna(subset=["Hours"], inplace=True)
             
-            # [중요] 시간 순서대로 강제 정렬 (그래프 튀는 원인 1 제거)
+            # 시간 순서 정렬
             df_data.sort_values("Hours", inplace=True)
             
             # Long Format 변환
@@ -98,7 +119,7 @@ def main():
             # --- 5. Blank Subtraction ---
             st.sidebar.header("⚙️ Data Processing")
             use_blank_correction = st.sidebar.checkbox("Apply Blank Correction", value=True)
-            clip_negative = st.sidebar.checkbox("Clip Negative Values to 0", value=True, help="Blank 뺄셈 결과가 음수면 0으로 만듭니다. (그래프 튀는 원인 2 제거)")
+            clip_negative = st.sidebar.checkbox("Clip Negative Values to 0", value=True)
             
             if use_blank_correction:
                 min_time = df_merged["Hours"].min()
@@ -123,26 +144,22 @@ def main():
                         val = row["OD600"]
                         if condition in blank_map:
                             val = val - blank_map[condition]
-                        
                         return val
 
                     df_merged["OD600"] = df_merged.apply(subtract_blank, axis=1)
                     
-                    # [중요] 음수 보정 적용
                     if clip_negative:
                         df_merged["OD600"] = df_merged["OD600"].clip(lower=0)
                     
-                    st.sidebar.success(f"✅ Corrected using T={min_time}h blanks.")
+                    st.sidebar.success(f"✅ Corrected using T={min_time:.1f}h blanks.")
                 else:
                     st.sidebar.warning("⚠️ No 'blank' samples found at start time.")
 
-            # 통계 계산
+            # 통계 계산 및 정렬
             stats = df_merged.groupby(["Group", "Hours"])["OD600"].agg(
                 ['mean', 'std', 'median', 'count']
             ).reset_index()
             stats['sem'] = stats['std'] / np.sqrt(stats['count'])
-            
-            # [중요] 통계 데이터도 시간순 정렬 (그래프 그릴 때 꼬임 방지)
             stats.sort_values("Hours", inplace=True)
 
             # --- 6. 그래프 설정 ---
@@ -208,10 +225,12 @@ def main():
                 plt.tight_layout()
                 st.pyplot(fig)
                 
-                # 디버깅용: 시간 파싱 확인
-                with st.expander("🔍 Debug: Time Parsing Check"):
-                    st.write("원본 시간 vs 변환된 시간 (Hours) 확인:")
-                    st.dataframe(df_data[["Time", "Hours"]].drop_duplicates().head(10))
+                # 데이터 확인용 (디버깅)
+                with st.expander("🔍 Debug: Time Check"):
+                    st.write("24시간 이상 데이터 변환 확인:")
+                    debug_df = df_data[["Time", "Hours"]].drop_duplicates().sort_values("Hours")
+                    # 23시간 이후 데이터만 필터링해서 보여주기
+                    st.dataframe(debug_df[debug_df["Hours"] > 23].head(10))
 
                 col_d1, col_d2 = st.columns(2)
                 csv_buffer = stats.to_csv(index=False).encode('utf-8')
