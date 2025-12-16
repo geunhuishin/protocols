@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 
 # 페이지 설정
-st.set_page_config(page_title="GAM Media Calculator", page_icon="🧫")
+st.set_page_config(page_title="GAM Media Recipe", page_icon="🧫")
 
-st.title("🧫 GAM Modified + Vitamin K1 Calculator")
+st.title("🧫 GAM Modified + Vitamin K1 Recipe")
 #st.caption("Based on Protocol: GAM modified supplemented with vitamin K1 (Geunhui Shin, 2025)")
 
 # 탭 분리: 스톡 용액 제조 vs 배지 제조
