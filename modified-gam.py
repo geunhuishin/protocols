@@ -5,7 +5,7 @@ import pandas as pd
 st.set_page_config(page_title="GAM Media Calculator", page_icon="🧫")
 
 st.title("🧫 GAM Modified + Vitamin K1 Calculator")
-st.caption("Based on Protocol: GAM modified supplemented with vitamin K1 (Geunhui Shin, 2025)")
+#st.caption("Based on Protocol: GAM modified supplemented with vitamin K1 (Geunhui Shin, 2025)")
 
 # 탭 분리: 스톡 용액 제조 vs 배지 제조
 tab1, tab2 = st.tabs(["🧪 Stock Solutions", "🥣 Media Preparation"])
