@@ -15,7 +15,7 @@ tab1, tab2 = st.tabs(["🧪 Stock Solutions", "🥣 Media Preparation"])
 with tab1:
     st.header("1. Stock Solution Calculator")
     
-    stock_type = st.selectbox("Select Stock Solution", ["Hemin (0.5 g/L)", "Vitamin K1 (10 g/L)", "10% NaHCO3"])
+    stock_type = st.selectbox("Select Stock Solution", ["Hemin (0.5 g/L)", "Vitamin K1 (10 g/L)"])
     
     make_vol = st.number_input("Volume to prepare (mL)", value=50, step=10)
     
