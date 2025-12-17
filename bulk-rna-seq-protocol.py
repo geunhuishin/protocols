@@ -81,16 +81,16 @@ def main():
 
     # 2. QC
     steps_qc = [
-        "Quantify using Quanti-IT RNA Assay BR kit (1-2µl input).",
+        "Quantify using Qubit RNA Broad Range (BR) Assay kit (1-2µl input).",
         "Target **15-20ug per pool** (or 400ng in 15µl if single sample).",
         "Add 1µl SUPERase-IN if storing at -80°C (Optional)."
     ]
 
     # 3. Frag & DNase
     mix_fastap = [
-        {"Reagent": "RNAse Inhibitor (Murine)", "Volume per rxn (µL)": 1.0},
-        {"Reagent": "TURBO DNase", "Volume per rxn (µL)": 4.0},
-        {"Reagent": "FastAP", "Volume per rxn (µL)": 10.0},
+        {"Reagent": "Recombinant RNase Inhibitor; Takara, Cat.# 2313A", "Volume per rxn (µL)": 1.0},
+        {"Reagent": "Turbo DNase; Ambion/Applied Biosystems, Cat.# AM2239", "Volume per rxn (µL)": 4.0},
+        {"Reagent": "FastAP Thermosensitive Alkaline Phosphatase; Thermo Scientific, Cat.# EF0651", "Volume per rxn (µL)": 10.0},
         {"Reagent": "Nuclease free water", "Volume per rxn (µL)": 5.0},
     ]
     steps_frag = [
@@ -110,8 +110,8 @@ def main():
         {"Reagent": "DMSO (100%)", "Volume per rxn (µL)": 1.8},
         {"Reagent": "ATP (100mM)", "Volume per rxn (µL)": 0.2},
         {"Reagent": "PEG 8000 (50%)", "Volume per rxn (µL)": 8.0},
-        {"Reagent": "RNAse inhibitor (Murine)", "Volume per rxn (µL)": 0.3},
-        {"Reagent": "T4 RNA Ligase 1", "Volume per rxn (µL)": 1.8},
+        {"Reagent": "Recombinant RNase Inhibitor; Takara, Cat.# 2313A", "Volume per rxn (µL)": 0.3},
+        {"Reagent": "T4 RNA Ligase 1; Enzynomics, Cat.# M042S", "Volume per rxn (µL)": 1.8},
     ]
     steps_lig1 = [
         "Add 1µl of **Unique Adapter** (100uM) to 5µl RNA.",
@@ -134,7 +134,7 @@ def main():
     ]
     
     mix_rnase_h = [
-        {"Reagent": "Hybridase RNase H", "Volume per rxn (µL)": 3.0},
+        {"Reagent": "RNase H; Enzynomics, Cat.# M036S", "Volume per rxn (µL)": 3.0},
         {"Reagent": "1M Tris-HCl (pH 7.5)", "Volume per rxn (µL)": 0.5},
         {"Reagent": "5M NaCl", "Volume per rxn (µL)": 0.2},
         {"Reagent": "1M MgCl2", "Volume per rxn (µL)": 0.4},
@@ -155,11 +155,11 @@ def main():
 
     # 6. Reverse Transcription
     mix_rt = [
-        {"Reagent": "SSIV buffer (5X)", "Volume per rxn (µL)": 4.0},
+        {"Reagent": "5X RT Buffer", "Volume per rxn (µL)": 4.0},
         {"Reagent": "dNTP mix (10mM)", "Volume per rxn (µL)": 1.0},
         {"Reagent": "100mM DTT", "Volume per rxn (µL)": 1.0},
-        {"Reagent": "Ribolock RNAse inhibitor", "Volume per rxn (µL)": 1.0},
-        {"Reagent": "SuperScript IV RT", "Volume per rxn (µL)": 1.0},
+        {"Reagent": "Recombinant RNase Inhibitor; Takara, Cat.# 2313A", "Volume per rxn (µL)": 1.0},
+        {"Reagent": "Maxima H Minus Reverse Transcriptase (200 U/μL); Thermo Scientific, Cat.# EP0752", "Volume per rxn (µL)": 1.0},
     ]
     steps_rt = [
         "Take 10µl rRNA depleted RNA.",
@@ -167,7 +167,7 @@ def main():
         "**Prepare RT Master Mix** (Calculated above).",
         "Add **8µl** Master Mix (Total 20µl).",
         "Incubate **55°C for 15 min**.",
-        "Add 1µl RNAseH. Incubate **37°C for 20 min**.",
+        "Add 1µl RNase H. Incubate **37°C for 20 min**.",
         "**2X SPRI Cleanup**. Elute in **5µl** water. **KEEP BEADS**."
     ]
 
@@ -177,7 +177,7 @@ def main():
         {"Reagent": "DMSO (100%)", "Volume per rxn (µL)": 0.8},
         {"Reagent": "ATP (100mM)", "Volume per rxn (µL)": 0.2},
         {"Reagent": "PEG 8000 (50%)", "Volume per rxn (µL)": 8.5},
-        {"Reagent": "T4 RNA Ligase I", "Volume per rxn (µL)": 1.5},
+        {"Reagent": "T4 RNA Ligase 1; Enzynomics, Cat.# M042S", "Volume per rxn (µL)": 1.5},
     ]
     steps_lig2 = [
         "Add 2µl RS_2adap (40uM) to cDNA/bead mix.",
@@ -191,14 +191,14 @@ def main():
 
     # 8. PCR
     mix_pcr = [
-        {"Reagent": "Kapa Hifi MM", "Volume per rxn (µL)": 25.0},
+        {"Reagent": "KOD ONE PCR MM; TOYOBO, Cat.# KMM-101", "Volume per rxn (µL)": 25.0},
         {"Reagent": "Nuclease free water", "Volume per rxn (µL)": 10.0},
-        {"Reagent": "10X SYBR Green I", "Volume per rxn (µL)": 1.0},
+        {"Reagent": "SYBR™ Gold Nucleic Acid Gel Stain (10,000X Concentrate in DMSO); Invitrogen, Cat.# S11494", "Volume per rxn (µL)": 1.0},
     ]
     steps_pcr = [
-        "**Prepare PCR Master Mix** (Kapa+Water+SYBR).",
+        "**Prepare PCR Master Mix** (KOD+Water+SYBR).",
         "Combine: 10µl cDNA + 2.5µl Fwd Primer + 2.5µl Rev Primer + 36µl Master Mix.",
-        "**qPCR Cycling**:\n 1. 98°C 3m\n 2. 98°C 20s\n 3. 67°C 15s\n 4. 72°C 1m\n (Repeat 2-4)\n 5. 72°C 5min",
+        "**qPCR Cycling**:\n 1. 98°C 3m\n 2. 98°C 10s\n 3. 67°C 15s\n 4. 72°C 1m\n (Repeat 2-4)\n 5. 72°C 5min",
         "Stop during exponential phase.",
         "**2X SPRI Cleanup**, elute 22µl.",
         "Run Egel (2%), Gel purify (Monarch).",
@@ -227,7 +227,7 @@ def main():
 
     with tab5:
         display_section("5. RNase H based rRNA Depletion", mix_rnase_h, steps_rrna, num_samples, excess_pct)
-        st.caption("*Note: Hybridization mix is calculated for the RNaseH Step mainly. Check protocol for Probe mix specifics.*")
+        st.caption("*Note: Hybridization mix is calculated for the RNase H Step mainly. Check protocol for Probe mix specifics.*")
 
     with tab6:
         display_section("6. Reverse Transcription", mix_rt, steps_rt, num_samples, excess_pct)
