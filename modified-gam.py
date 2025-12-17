@@ -90,7 +90,7 @@ with tab2:
 
     # 계산된 양
     water_start = 850 * scale
-    gam_g = 35.4 * scale
+    gam_g = 59.0 * scale
     agar_g = 15.0 * scale
     water_final_vol = 970 * scale
 
