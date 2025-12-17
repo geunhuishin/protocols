@@ -77,7 +77,7 @@ with tab2:
     st.info("💡 Mix reagents and autoclave. Final pH should be 7.0 ± 0.2 at 25°C.")
 
     # 계산된 양
-    water_mL = 950 * scale
+    water_mL = 940 * scale
     bb_g = 28.1 * scale 
     agar_g = 15.0 * scale
 
