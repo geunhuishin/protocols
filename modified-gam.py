@@ -34,9 +34,9 @@ with tab1:
         4. **Filter sterilize**. Store refrigerated.
         """)
         
-    elif stock_type == "Vitamin K1 (10 g/L)":
+    elif stock_type == "Vitamin K1 (5 g/L)":
         # PDF Step 1: 0.5g in 50mL
-        vitk_g = (10 / 1000) * make_vol
+        vitk_g = (5 / 1000) * make_vol
         ethanol_vol = make_vol # Solvent is 95% Ethanol
         
         st.markdown(f"""
@@ -118,7 +118,7 @@ with tab2:
     # 계산된 양
     hemin_ml = 10.0 * scale
     nahco3_ml = 20.0 * scale
-    vitk1_ul = 100 * scale 
+    vitk1_ul = 200 * scale 
 
     st.markdown("#### 📝 Checklist")
     
