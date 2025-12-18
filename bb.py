@@ -35,9 +35,9 @@ with tab1:
         4. **Filter sterilize**. Store refrigerated.
         """)
         
-    elif stock_type == "Vitamin K1 (10 g/L)":
+    elif stock_type == "Vitamin K1 (5 g/L)":
         # PDF Step 1: 0.5g in 50mL
-        vitk_g = (10 / 1000) * make_vol
+        vitk_g = (5 / 1000) * make_vol
         ethanol_vol = make_vol # Solvent is 95% Ethanol
         
         st.markdown(f"""
@@ -102,13 +102,13 @@ with tab2:
     # 계산된 양
     sheep_blood_defibrinated_ml = 50.0 * scale
     hemin_ml = 10.0 * scale
-    vitk1_ul = 100 * scale
+    vitk1_ul = 200 * scale
 
     st.markdown("#### 📝 Step-by-Step Checklist")
     
     step4 = st.checkbox(f"4. Cool the medium to **45°C to 50°C** at room temp.")
     step5 = st.checkbox(f"5. (In Biosafety Cabinet) Add **{hemin_ml:.2f} mL** of Hemin stock (0.5 g/L).")
-    step6 = st.checkbox(f"6. (In Biosafety Cabinet) Add **{vitk1_ul:.1f} µL** of Vitamin K1 stock (10 g/L).")
+    step6 = st.checkbox(f"6. (In Biosafety Cabinet) Add **{vitk1_ul:.1f} µL** of Vitamin K1 stock (5 g/L).")
     step7 = st.checkbox(f"7. (In Biosafety Cabinet) Add **{sheep_blood_defibrinated_ml:.2f} mL** of Sheep blood defibrinated (MB-S1876, KisanBio).")
     step8 = st.checkbox(f"8. Swirl gently to mix without creating bubbles.")
     step9 = st.checkbox(f"9. Pour into Petri dishes and let dry with lids slightly open for ~1 hour.")
